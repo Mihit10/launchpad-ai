@@ -555,47 +555,70 @@ def ideation_generate_roadmap():
         params = data.get('params', {})
         
         prompt = f"""
-Create a detailed development roadmap for the following startup idea(s):
+You are a startup strategy and product management expert.
 
-Selected Ideas:
+Your task is to design a **complete, actionable roadmap** for the following startup idea(s):
+
+Startup Idea(s):
 {chr(10).join([f"- {idea.get('name', 'Unnamed')}: {idea.get('description', 'No description')}" for idea in ideas])}
 
-Timeline: {params.get('timeline', '6 months')}
+Project Timeline: {params.get('timeline', '6 months')}
 Key Goals: {params.get('goals', 'No specific goals provided')}
 Current Challenges: {params.get('weakness', 'No challenges specified')}
 
-Please provide a comprehensive roadmap with the following structure:
+---
 
-1. Executive Summary
-   - Overview of the roadmap
-   - Key milestones and timeline
+### Your Output Objective:
+Generate a structured roadmap in **valid JSON only** (no markdown, no commentary).  
+You must intelligently determine the **number of phases** based on:
+- The overall timeline (3 / 6 / 12 months)
+- The startup’s complexity and goals
+- Logical dependency of activities (foundation → development → launch → growth)
+- Reasonable time allocation per phase
 
-2. Phase Breakdown (for {params.get('timeline', '6 months')})
-   - Phase 1: Foundation (Month 1-2)
-   - Phase 2: Development (Month 3-4)
-   - Phase 3: Launch Preparation (Month 5)
-   - Phase 4: Market Entry (Month 6)
+If a startup needs many steps, you may create **more phases with smaller durations** (e.g., 5–6 phases for a 3-month project).  
+If it’s a longer or complex project, you may use **fewer, broader phases** (e.g., 8–10 for 12 months).
 
-For each phase include:
-- Objectives
-- Key Activities
-- Deliverables
-- Resource Requirements
-- Risk Mitigation
-- Success Metrics
+---
 
-3. Critical Success Factors
-   - Key dependencies
-   - Required resources
-   - Risk management
+### **JSON Format (strictly follow this)**
+Output must be strictly valid JSON in this structure:
 
-4. Budget Considerations
-   - Cost estimates per phase
-   - Funding requirements
-   - Revenue projections
+{{
+  "steps": [
+    {{
+      "name": "Phase 1: Research and Ideation",
+      "description": "Conduct market research, define user personas, validate key assumptions, and refine the MVP concept.",
+      "timeframe": "Weeks 1–2"
+    }},
+    {{
+      "name": "Phase 2: MVP Development",
+      "description": "Develop core product features, set up backend, and integrate minimal viable functionalities.",
+      "timeframe": "Weeks 3–6"
+    }},
+    {{
+      "name": "Phase 3: Launch & Feedback Loop",
+      "description": "Launch MVP publicly, gather feedback, iterate on key issues, and track product-market fit indicators.",
+      "timeframe": "Weeks 7–12"
+    }}
+  ]
+}}
 
-Please be specific and provide actionable steps for each phase.
+---
+
+### **Rules:**
+1. Always output **only valid JSON**, starting with `{{` and ending with `}}`.
+2. Each phase should have:
+   - A clear actionable **name**
+   - A detailed **description**
+   - A realistic **timeframe** (in weeks or months depending on the duration)
+3. Ensure **total timeframe aligns with** the given overall timeline (e.g., all steps should cover ~6 months if user selected 6 months).
+4. Avoid repetitive or generic step names like "Phase 1", "Phase 2" — make them **meaningful and unique**.
+5. Ensure all text is concise and well-written for direct display in a roadmap UI.
 """
+
+
+
         
         output = call_gemini(prompt)
         
