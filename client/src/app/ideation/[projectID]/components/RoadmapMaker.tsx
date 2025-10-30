@@ -1,12 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import html2canvas from "html2canvas";
-import { jsPDF } from "jspdf";
+// import html2canvas from "html2canvas";
+// import { jsPDF } from "jspdf";
 import { apiFetch } from "../../../../lib/api";
 import { Project } from "../../../../lib/types";
 import ReactMarkdown from "react-markdown";
-import domtoimage from "dom-to-image-more";
+// import domtoimage from "dom-to-image-more";
 
 
 interface RoadmapMakerProps {
@@ -100,21 +100,24 @@ export default function RoadmapMaker({ projectID, project }: RoadmapMakerProps) 
   };
 
   const exportToPDF = async () => {
-  const input = document.getElementById("roadmap-container");
-  if (!input) return;
+  if (typeof window === "undefined") return; // SSR guard
 
-  try {
-    const dataUrl = await domtoimage.toPng(input);
-    const pdf = new jsPDF("p", "mm", "a4");
-    const imgWidth = 190;
-    const imgHeight = (input.offsetHeight * imgWidth) / input.offsetWidth;
+  const { jsPDF } = await import("jspdf");
+  const domtoimage = (await import("dom-to-image-more")).default;
 
-    pdf.addImage(dataUrl, "PNG", 10, 10, imgWidth, imgHeight);
-    pdf.save("roadmap.pdf");
-  } catch (err) {
-    console.error("Error exporting PDF:", err);
-  }
+  const node = document.getElementById("roadmap-container");
+  if (!node) return;
+
+  const canvas = await domtoimage.toPng(node);
+  const pdf = new jsPDF("p", "mm", "a4");
+  const imgProps = pdf.getImageProperties(canvas);
+  const pdfWidth = pdf.internal.pageSize.getWidth();
+  const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+  pdf.addImage(canvas, "PNG", 0, 0, pdfWidth, pdfHeight);
+  pdf.save("roadmap.pdf");
 };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-950 text-white p-6">
