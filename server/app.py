@@ -23,6 +23,7 @@ from datetime import datetime
 load_dotenv()
 app = Flask(__name__)
 CORS(app)  # dev: allow all; tighten in production
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 # ------------------- Firebase Setup -------------------
 cred = credentials.Certificate("firebase_credentials.json")
